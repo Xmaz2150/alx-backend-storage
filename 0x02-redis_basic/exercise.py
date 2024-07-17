@@ -3,7 +3,7 @@
 cache module
 """
 import redis
-from typing import Union
+from typing import Union, Callable, Optional
 import uuid
 
 
@@ -28,3 +28,27 @@ class Cache:
         self._redis.set(key, data)
 
         return key
+
+    def get(self, key: str, fn: Optional[Callable] = None) -> Optional[any]:
+        """
+        retrieve value from server by key,
+        optionally apply transformation function `fn` to the retrieved value.
+        """
+        value = self._redis.get(key)
+        if value is None:
+            return None
+        if fn is not None:
+            return fn(value)
+        return value
+
+    def get_str(self, key: str) -> Optional[str]:
+        """
+        retrieves string value from server by key using `get`
+        """
+        return self.get(key, fn=lambda d: d.decode("utf-8"))
+
+    def get_int(self, key: str) -> Optional[int]:
+        """
+        retrieves int value from server by key using `get`
+        """
+        return self.get(key, fn=int)
